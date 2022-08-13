@@ -1,6 +1,9 @@
 package com.yolo.game.engine;
 
+import lombok.Data;
+
+@Data
 public class Player {
-    public Player(String id) {
-    }
+    private String id;
+    private String nickname;
 }

@@ -14,4 +14,19 @@ public class SimpleGameEngine implements GameEngine {
     public void subscribe(GameObserver observer) {
 
     }
+
+    @Override
+    public void start() {
+
+    }
+
+    @Override
+    public void registerPlayer(Player player) {
+
+    }
+
+    @Override
+    public void removePlayer(Player player) {
+
+    }
 }
