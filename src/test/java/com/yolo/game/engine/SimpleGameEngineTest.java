@@ -6,16 +6,17 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.*;
 
 class SimpleGameEngineTest {
@@ -23,11 +24,13 @@ class SimpleGameEngineTest {
     @Mock
     private GameObserver observer;
     private GameEngine engine;
-    private final Player player1 = new Player("12345");
-    private final Player player2 = new Player("22345");
-    private final Player player3 = new Player("32345");
-    private final BetEvent player1Bet = new BetEvent(player1, 1, BigDecimal.valueOf(50));
-    private final BetEvent player2Bet = new BetEvent(player2, 2, BigDecimal.valueOf(100));
+    private final Player player1 = new Player("11111");
+    private final Player player2 = new Player("22222");
+    private final Player player3 = new Player("33333");
+    private final Player player4 = new Player("44444");
+    private final Player player5 = new Player("55555");
+    private final BetEvent player1LosingBet = new BetEvent(player1, 1, BigDecimal.valueOf(50));
+    private final BetEvent player2LosingBet = new BetEvent(player2, 2, BigDecimal.valueOf(100));
     private final PlayerNotification player1StartRound1Notification = new PlayerNotification(player1, "Round 1 started. You have 2 sec to make your bet on numbers from 1 to 10");
     private final PlayerNotification player1StartRound2Notification = new PlayerNotification(player1, "Round 2 started. You have 2 sec to make your bet on numbers from 1 to 10");
     private final PlayerNotification player2StartRound1Notification = new PlayerNotification(player2, "Round 1 started. You have 2 sec to make your bet on numbers from 1 to 10");
@@ -66,37 +69,79 @@ class SimpleGameEngineTest {
         verify(observer, after(3000)).notify(List.of(player1StartRound2Notification));
     }
 
-    @DisplayName("At the end of the round should notify all players about round stats when there is no winner")
+    @DisplayName("At the end of the round all players should be notified about round stats when there is no winner")
     @Test
     void shouldNotifyEverybodyAboutRoundStats() throws InterruptedException {
         engine.registerPlayer(player1);
         engine.registerPlayer(player2);
         engine.registerPlayer(player3);
-        List<List<PlayerNotification>> expectedNotifications = List.of(
-                List.of(player1StartRound1Notification, player2StartRound1Notification, player3StartRound1Notification),
-                List.of(player1LostRoundNotification, player2LostRound1Notification),
-                List.of(player1RoundEnd1Notification, player2RoundEnd1Notification, player3RoundStats1Notification)
-        );
         final List<List<PlayerNotification>> actualNotifications = new ArrayList<>();
-        engine.subscribe(actualNotifications::add);
+        CountDownLatch latch = subscribeForOneRoundEvents(actualNotifications);
 
         engine.start();
-        engine.onEvent(player1Bet);
-        engine.onEvent(player2Bet);
-        TimeUnit.SECONDS.sleep(1);
-        engine.terminate();
-        TimeUnit.SECONDS.sleep(3);
+        engine.onEvent(player1LosingBet);
+        engine.onEvent(player2LosingBet);
+        latch.await();
 
-        assertEquals(expectedNotifications, actualNotifications);
+        assertTrue(actualNotifications.contains(List.of(player1RoundEnd1Notification, player2RoundEnd1Notification, player3RoundStats1Notification)));
     }
-        //todo should notify all about round stats      * * All players receive a message with a list of winning players: nickname:amount
+
+    @DisplayName("At the end of the round losers should be notified about their loss")
+    @Test
+    void shouldNotifyLosersWhenLosingRound() throws InterruptedException {
+        engine.registerPlayer(player1);
+        engine.registerPlayer(player2);
+        engine.registerPlayer(player3);
+        final List<List<PlayerNotification>> actualNotifications = new ArrayList<>();
+        CountDownLatch latch = subscribeForOneRoundEvents(actualNotifications);
+
+        engine.start();
+        engine.onEvent(player1LosingBet);
+        engine.onEvent(player2LosingBet);
+        latch.await();
+
+        assertTrue(actualNotifications.contains(List.of(player1LostRoundNotification, player2LostRound1Notification)));
+    }
+
+    @DisplayName("At the end of the round losers should be notified about their loss")
     //todo should notify winners      * * Winners are notified with the amount won and ratio to original stake
+    //todo should notify all about round stats      * * All players receive a message with a list of winning players: nickname:amount
+    @Test
+    void shouldNotifyWinnersWithTheAmountWon() throws InterruptedException {
+        engine.registerPlayer(player1);
+        engine.registerPlayer(player2);
+        engine.registerPlayer(player3);
+        engine.registerPlayer(player4);
+        engine.registerPlayer(player5);
+        final List<List<PlayerNotification>> actualNotifications = new ArrayList<>();
+        CountDownLatch latch = subscribeForOneRoundEvents(actualNotifications);
+
+        engine.start();
+        engine.onEvent(player1WinningBet);
+        engine.onEvent(player2WinningBet);
+        engine.onEvent(player3LosingBet);
+        engine.onEvent(player4LosingBet);
+        engine.onEvent(player5LosingBet);
+        latch.await();
+
+        assertTrue(actualNotifications.contains(List.of(player1WinRoundNotification, player2WinRound1Notification)));
+    }
+
+    //todo join most test cases into one generic and dynamic data source
+
+    private CountDownLatch subscribeForOneRoundEvents(List<List<PlayerNotification>> actualNotifications) {
+        int expectedNotificationBulksPerRound = 3;
+        CountDownLatch latch = new CountDownLatch(expectedNotificationBulksPerRound);
+        engine.subscribe(e -> {
+            actualNotifications.add(e);
+            latch.countDown();
+        });
+        return latch;
+    }
 
 
-    //todo should not accept bet with number out of range or invalid/empty bet - re
-    // turn out of range notification
+    //todo should not accept bet with number out of range or invalid/empty bet - return error notification to the user
     //todo should not accept bets between rounds     //todo don't accept players when round not started yet - send message back to them * If there is no active round, user is notified about refused bet
-
 
     /*
     **Game process:**
