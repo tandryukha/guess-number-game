@@ -23,7 +23,7 @@ class SimpleGameEngineTest {
     @BeforeEach
     void setUp() throws Exception {
         MockitoAnnotations.openMocks(this).close();
-        config = GameConfig.builder().roundDuration(3).build();
+        config = GameConfig.builder().roundDuration(2).build();
         engine = new SimpleGameEngine(config);
     }
 
@@ -32,8 +32,8 @@ class SimpleGameEngineTest {
     void shouldNotifyAboutRoundStart() {
         engine.registerPlayer(player1);
         engine.subscribe(observer);
-        List<PlayerNotification> startNotifications = List.of(new PlayerNotification(player1, "Round 1 started. Make your bet, you have 3 sec"));
-        List<PlayerNotification> startNotifications2 = List.of(new PlayerNotification(player1, "Round 2 started. Make your bet, you have 3 sec"));
+        List<PlayerNotification> startNotifications = List.of(new PlayerNotification(player1, "Round 1 started. Make your bet, you have 2 sec"));
+        List<PlayerNotification> startNotifications2 = List.of(new PlayerNotification(player1, "Round 2 started. Make your bet, you have 2 sec"));
 
         engine.start();
 
@@ -47,7 +47,19 @@ class SimpleGameEngineTest {
     //todo should notify losers      * * Losers are notified about the loss
     //todo should notify winners      * * Winners are notified with the amount won and ratio to original stake
     //todo should notify all about round stats      * * All players receive a message with a list of winning players: nickname:amount
-    //todo verify round lasts for 10 seconds - use several verifications every 10 sec verify(observer, after(10000)).onGameEvent(expectedEvent);
     //todo should register/unregister players. Once unregistered, bet should still be distributed there
 
+    /*
+    **Game process:**
+
+1) The server starts a round of the game and gives 10 seconds to place a bet for the players on numbers from 1 to 10 with the **amount of the bet**
+
+2) After the time expires, the server generates a random number from 1 to 10
+
+3) If the player guesses the number, a message is sent to him that he won with a winnings of 9.9 times the stake
+
+4) If the player loses receives a message about the loss
+
+5) All players receive a message with a list of winning players in which there is a nickname and the amount of winnings
+     */
 }
