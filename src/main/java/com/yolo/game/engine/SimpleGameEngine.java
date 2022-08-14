@@ -4,18 +4,22 @@ import com.yolo.game.config.GameConfig;
 import com.yolo.game.event.PlayerEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 
+@Slf4j
 @RequiredArgsConstructor
 public class SimpleGameEngine extends Thread implements GameEngine {
     private final GameConfig config;
     private final List<GameObserver> observers = new ArrayList<>();
     private final Set<Player> players = new HashSet<>();
     private int round;
+    private boolean active = true;
 
     @Override
     public Optional<PlayerNotification> onEvent(PlayerEvent event) {
@@ -37,15 +41,20 @@ public class SimpleGameEngine extends Thread implements GameEngine {
         players.remove(player);
     }
 
-    @SuppressWarnings({"InfiniteLoopStatement", "BusyWait"})
     @SneakyThrows
     @Override
     public void run() {
-        while (true) {
+        log.info("Starting thread {} round={}", getName(), round);
+        while (active) {
             finalizeRound();
             startNewRound();
-            Thread.sleep(config.getRoundDuration() * 1000);
+            TimeUnit.SECONDS.sleep(config.getRoundDuration());
         }
+    }
+
+    @Override
+    public void terminate() {
+        active = false;
     }
 
     private void finalizeRound() {
@@ -53,6 +62,7 @@ public class SimpleGameEngine extends Thread implements GameEngine {
     }
 
     private void startNewRound() {
+        log.info("Thread {} finished round={}", getName(), round);
         round++;
         List<PlayerNotification> notifications = players.stream()
                 .map(this::getRoundStartNotification)
@@ -61,7 +71,11 @@ public class SimpleGameEngine extends Thread implements GameEngine {
     }
 
     private PlayerNotification getRoundStartNotification(Player player) {
-        String message = format("Round %s started. Make your bet, you have %s sec", round, config.getRoundDuration());
+        String message = format("Round %s started. You have %s sec to make your bet on numbers from %s to %s",
+                round,
+                config.getRoundDuration(),
+                1, config.getRandomNumbers()
+        );
         return new PlayerNotification(player, message);
     }
 

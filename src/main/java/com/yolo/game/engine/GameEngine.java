@@ -14,4 +14,7 @@ public interface GameEngine {
     void registerPlayer(Player player);
 
     void removePlayer(Player player);
+
+    void terminate();
+
 }

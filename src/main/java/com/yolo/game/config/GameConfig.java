@@ -9,7 +9,7 @@ import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 
 @Data
-@Builder
+@Builder()
 @ConfigurationProperties(prefix = "game")
 @Validated
 public class GameConfig {
@@ -19,4 +19,14 @@ public class GameConfig {
     @NotNull
     @Min(1)
     private Integer roundDuration;
+    @NotNull
+    @Min(1)
+    private Integer minStake;
+    @NotNull
+    @Min(1)
+    private Integer maxStake;
+    @NotNull
+    @Min(1)
+    private Integer randomNumbers;
+
 }
