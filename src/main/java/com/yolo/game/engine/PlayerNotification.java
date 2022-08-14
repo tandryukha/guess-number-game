@@ -1,9 +1,10 @@
 package com.yolo.game.engine;
 
-import lombok.Data;
+import lombok.*;
 
 @Data
+@RequiredArgsConstructor
 public class PlayerNotification {
-    private Player player;
-    private String message;
+    private final Player player;
+    private final String message;
 }

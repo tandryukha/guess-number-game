@@ -1,10 +1,15 @@
 package com.yolo.game.engine;
 
+import com.yolo.game.config.GameConfig;
 import com.yolo.game.event.PlayerEvent;
+import lombok.RequiredArgsConstructor;
 
 import java.util.Optional;
 
+@RequiredArgsConstructor
 public class SimpleGameEngine implements GameEngine {
+    private final GameConfig config;
+
     @Override
     public Optional<PlayerNotification> onEvent(PlayerEvent event) {
         return Optional.empty();

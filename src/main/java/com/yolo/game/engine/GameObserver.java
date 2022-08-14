@@ -1,7 +1,7 @@
 package com.yolo.game.engine;
 
-import com.yolo.game.event.GameEvent;
+import java.util.List;
 
 public interface GameObserver {
-    void onGameEvent(GameEvent event);
+    void notify(List<PlayerNotification> startNotifications);
 }

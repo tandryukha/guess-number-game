@@ -5,7 +5,6 @@ import com.yolo.game.engine.GameObserver;
 import com.yolo.game.engine.Player;
 import com.yolo.game.engine.PlayerNotification;
 import com.yolo.game.event.EventAdapter;
-import com.yolo.game.event.GameEvent;
 import com.yolo.game.event.PlayerEvent;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
@@ -47,8 +46,7 @@ public class GameController extends TextWebSocketHandler implements GameObserver
     }
 
     @Override
-    public void onGameEvent(GameEvent event) {
-        List<PlayerNotification> notifications = event.getNotifications();
+    public void notify(List<PlayerNotification> notifications) {
         notifications.forEach(this::notifyPlayer);
     }
 
