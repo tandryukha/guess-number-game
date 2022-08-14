@@ -6,16 +6,17 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 import java.math.BigDecimal;
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import static org.mockito.Mockito.after;
-import static org.mockito.Mockito.verify;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.*;
 
 class SimpleGameEngineTest {
 
@@ -23,15 +24,19 @@ class SimpleGameEngineTest {
     private GameObserver observer;
     private GameEngine engine;
     private final Player player1 = new Player("12345");
-    private final BetEvent player1Bet = new BetEvent(player1, 1, BigDecimal.valueOf(50));
     private final Player player2 = new Player("22345");
+    private final Player player3 = new Player("32345");
+    private final BetEvent player1Bet = new BetEvent(player1, 1, BigDecimal.valueOf(50));
     private final BetEvent player2Bet = new BetEvent(player2, 2, BigDecimal.valueOf(100));
-    private final PlayerNotification player2StartRound1Notification = new PlayerNotification(player1, "Round 2 started. You have 2 sec to make your bet on numbers from 1 to 10");
     private final PlayerNotification player1StartRound1Notification = new PlayerNotification(player1, "Round 1 started. You have 2 sec to make your bet on numbers from 1 to 10");
-    private final PlayerNotification player1LostRoundNotification = new PlayerNotification(player1, "You lost in round 1");
-    private final PlayerNotification player1RoundStats1Notification = new PlayerNotification(player1, "No winners in round 1");
-    private final PlayerNotification player2LostRound1Notification = new PlayerNotification(player1, "You lost in round 1");
-    private final PlayerNotification player2RoundStats1Notification = new PlayerNotification(player1, "No winners in round 1");
+    private final PlayerNotification player1StartRound2Notification = new PlayerNotification(player1, "Round 2 started. You have 2 sec to make your bet on numbers from 1 to 10");
+    private final PlayerNotification player2StartRound1Notification = new PlayerNotification(player2, "Round 1 started. You have 2 sec to make your bet on numbers from 1 to 10");
+    private final PlayerNotification player3StartRound1Notification = new PlayerNotification(player3, "Round 1 started. You have 2 sec to make your bet on numbers from 1 to 10");
+    private final PlayerNotification player1LostRoundNotification = new PlayerNotification(player1, "You've lost in round 1");
+    private final PlayerNotification player1RoundEnd1Notification = new PlayerNotification(player1, "No winners in round 1");
+    private final PlayerNotification player2LostRound1Notification = new PlayerNotification(player2, "You've lost in round 1");
+    private final PlayerNotification player2RoundEnd1Notification = new PlayerNotification(player2, "No winners in round 1");
+    private final PlayerNotification player3RoundStats1Notification = new PlayerNotification(player3, "No winners in round 1");
 
     @BeforeEach
     void setUp() throws Exception {
@@ -58,35 +63,45 @@ class SimpleGameEngineTest {
         TimeUnit.SECONDS.sleep(1);
 
         verify(observer).notify(List.of(player1StartRound1Notification));
-        verify(observer, after(3000)).notify(List.of(player2StartRound1Notification));
+        verify(observer, after(3000)).notify(List.of(player1StartRound2Notification));
     }
 
     @Test
         //todo should accept bets during round * Game accepts bet only if there is an active round
         //todo should notify losers      * * Losers are notified about the loss
         //todo should notify all about round stats      * * All players receive a message with a list of winning players: nickname:amount
-    void shouldNotifyEverybodyAboutRoundStats() {
+    void shouldNotifyEverybodyAboutRoundStats() throws InterruptedException {
         engine.registerPlayer(player1);
         engine.registerPlayer(player2);
-        engine.subscribe(observer);
+        engine.registerPlayer(player3);
+        List<List<PlayerNotification>> expectedNotifications = List.of(
+                List.of(player1StartRound1Notification, player2StartRound1Notification, player3StartRound1Notification),
+                List.of(player1LostRoundNotification, player2LostRound1Notification),
+                List.of(player1RoundEnd1Notification, player2RoundEnd1Notification, player3RoundStats1Notification)
+        );
+        final List<List<PlayerNotification>> actualNotifications = new ArrayList<>();
+        engine.subscribe(actualNotifications::add);
 
         engine.start();
         engine.onEvent(player1Bet);
         engine.onEvent(player2Bet);
+        TimeUnit.SECONDS.sleep(1);
+        engine.terminate();
+        TimeUnit.SECONDS.sleep(4);
 
-        verify(observer).notify(List.of(
-                player1StartRound1Notification,
-                player2StartRound1Notification,
-                player1LostRoundNotification,
-                player2LostRound1Notification,
-                player1RoundStats1Notification,
-                player2RoundStats1Notification
-        ));
+        assertEquals(expectedNotifications, actualNotifications);
+
+
+//        InOrder inOrder = inOrder(observer);
+//        inOrder.verify(observer).notify(List.of(player1StartRound1Notification, player2StartRound1Notification,player3StartRound1Notification));
+//        inOrder.verify(observer).notify(List.of(player1LostRoundNotification, player2LostRound1Notification));
+//        inOrder.verify(observer).notify(List.of(player1RoundEnd1Notification, player2RoundEnd1Notification, player3RoundStats1Notification));
     }
     //todo should notify winners      * * Winners are notified with the amount won and ratio to original stake
 
 
-    //todo should not accept bet with number out of range or invalid/empty bet
+    //todo should not accept bet with number out of range or invalid/empty bet - re
+    // turn out of range notification
     //todo should not accept bets between rounds     //todo don't accept players when round not started yet - send message back to them * If there is no active round, user is notified about refused bet
 
 
