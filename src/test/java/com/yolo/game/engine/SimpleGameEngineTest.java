@@ -1,6 +1,7 @@
 package com.yolo.game.engine;
 
 import com.yolo.game.config.GameConfig;
+import com.yolo.game.engine.random.NumberGenerator;
 import com.yolo.game.event.BetEvent;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -21,8 +22,11 @@ import static org.mockito.Mockito.*;
 
 class SimpleGameEngineTest {
 
+    public static final String ROUND_END_MESSAGE_NO_WINNERS = "Winning number in round 1 is 7. Winners:\nNo winners";
     @Mock
     private GameObserver observer;
+    @Mock
+    private NumberGenerator numberGenerator;
     private GameEngine engine;
     private final Player player1 = new Player("11111");
     private final Player player2 = new Player("22222");
@@ -31,24 +35,35 @@ class SimpleGameEngineTest {
     private final Player player5 = new Player("55555");
     private final BetEvent player1LosingBet = new BetEvent(player1, 1, BigDecimal.valueOf(50));
     private final BetEvent player2LosingBet = new BetEvent(player2, 2, BigDecimal.valueOf(100));
+
+    private final BetEvent player1WinningBet = new BetEvent(player1, 7, BigDecimal.valueOf(1000));
+    private final BetEvent player2WinningBet = new BetEvent(player2, 7, BigDecimal.valueOf(100));
+    private final BetEvent player3LosingBet = new BetEvent(player3, 3, BigDecimal.valueOf(500));
+    private final BetEvent player4LosingBet = new BetEvent(player4, 4, BigDecimal.valueOf(1000));
+    private final BetEvent player5LosingBet = new BetEvent(player5, 5, BigDecimal.valueOf(50));
+
     private final PlayerNotification player1StartRound1Notification = new PlayerNotification(player1, "Round 1 started. You have 2 sec to make your bet on numbers from 1 to 10");
     private final PlayerNotification player1StartRound2Notification = new PlayerNotification(player1, "Round 2 started. You have 2 sec to make your bet on numbers from 1 to 10");
     private final PlayerNotification player2StartRound1Notification = new PlayerNotification(player2, "Round 1 started. You have 2 sec to make your bet on numbers from 1 to 10");
     private final PlayerNotification player3StartRound1Notification = new PlayerNotification(player3, "Round 1 started. You have 2 sec to make your bet on numbers from 1 to 10");
+    private final PlayerNotification player1WinRoundNotification = new PlayerNotification(player1, "You guessed the number and won 9900.00!");
+    private final PlayerNotification player2WinRound1Notification = new PlayerNotification(player2, "You guessed the number and won 990.00!");
     private final PlayerNotification player1LostRoundNotification = new PlayerNotification(player1, "You've lost in round 1");
-    private final PlayerNotification player1RoundEnd1Notification = new PlayerNotification(player1, "No winners in round 1");
+    private final PlayerNotification player1RoundEnd1Notification = new PlayerNotification(player1, ROUND_END_MESSAGE_NO_WINNERS);
+    private final PlayerNotification player2RoundEnd1Notification = new PlayerNotification(player2, ROUND_END_MESSAGE_NO_WINNERS);
+    private final PlayerNotification player3RoundStats1Notification = new PlayerNotification(player3, ROUND_END_MESSAGE_NO_WINNERS);
     private final PlayerNotification player2LostRound1Notification = new PlayerNotification(player2, "You've lost in round 1");
-    private final PlayerNotification player2RoundEnd1Notification = new PlayerNotification(player2, "No winners in round 1");
-    private final PlayerNotification player3RoundStats1Notification = new PlayerNotification(player3, "No winners in round 1");
 
     @BeforeEach
     void setUp() throws Exception {
         MockitoAnnotations.openMocks(this).close();
         GameConfig config = GameConfig.builder()
                 .roundDuration(2)
-                .randomNumbers(10)
+                .randomNumbersCount(10)
+                .winMultiplier(9.9)
                 .build();
-        engine = new SimpleGameEngine(config);
+        engine = new SimpleGameEngine(config, numberGenerator);
+        when(numberGenerator.generate(1, 10)).thenReturn(7);
     }
 
     @AfterEach
@@ -103,9 +118,11 @@ class SimpleGameEngineTest {
         assertTrue(actualNotifications.contains(List.of(player1LostRoundNotification, player2LostRound1Notification)));
     }
 
-    @DisplayName("At the end of the round losers should be notified about their loss")
+    @DisplayName("At the end of the round winners should be notified about their win")
     //todo should notify winners      * * Winners are notified with the amount won and ratio to original stake
     //todo should notify all about round stats      * * All players receive a message with a list of winning players: nickname:amount
+//    2) After the time expires, the server generates a random number from 1 to 10
+//    3) If the player guesses the number, a message is sent to him that he won with a winnings of 9.9 times the stake
     @Test
     void shouldNotifyWinnersWithTheAmountWon() throws InterruptedException {
         engine.registerPlayer(player1);

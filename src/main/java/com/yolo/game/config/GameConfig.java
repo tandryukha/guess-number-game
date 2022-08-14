@@ -27,6 +27,7 @@ public class GameConfig {
     private Integer maxStake;
     @NotNull
     @Min(1)
-    private Integer randomNumbers;
+    private Integer randomNumbersCount;
+    private double winMultiplier;
 
 }
