@@ -66,10 +66,8 @@ class SimpleGameEngineTest {
         verify(observer, after(3000)).notify(List.of(player1StartRound2Notification));
     }
 
+    @DisplayName("At the end of the round should notify all players about round stats when there is no winner")
     @Test
-        //todo should accept bets during round * Game accepts bet only if there is an active round
-        //todo should notify losers      * * Losers are notified about the loss
-        //todo should notify all about round stats      * * All players receive a message with a list of winning players: nickname:amount
     void shouldNotifyEverybodyAboutRoundStats() throws InterruptedException {
         engine.registerPlayer(player1);
         engine.registerPlayer(player2);
@@ -87,16 +85,11 @@ class SimpleGameEngineTest {
         engine.onEvent(player2Bet);
         TimeUnit.SECONDS.sleep(1);
         engine.terminate();
-        TimeUnit.SECONDS.sleep(4);
+        TimeUnit.SECONDS.sleep(3);
 
         assertEquals(expectedNotifications, actualNotifications);
-
-
-//        InOrder inOrder = inOrder(observer);
-//        inOrder.verify(observer).notify(List.of(player1StartRound1Notification, player2StartRound1Notification,player3StartRound1Notification));
-//        inOrder.verify(observer).notify(List.of(player1LostRoundNotification, player2LostRound1Notification));
-//        inOrder.verify(observer).notify(List.of(player1RoundEnd1Notification, player2RoundEnd1Notification, player3RoundStats1Notification));
     }
+        //todo should notify all about round stats      * * All players receive a message with a list of winning players: nickname:amount
     //todo should notify winners      * * Winners are notified with the amount won and ratio to original stake
 
 
