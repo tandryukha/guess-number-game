@@ -13,10 +13,8 @@ import org.springframework.web.socket.handler.TextWebSocketHandler;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 public class GameController extends TextWebSocketHandler implements GameObserver {
-    private final List<WebSocketSession> onlineSessions = new CopyOnWriteArrayList<>();
     private final GameEngine gameEngine;
 
     private final EventAdapter eventAdapter;
@@ -30,13 +28,11 @@ public class GameController extends TextWebSocketHandler implements GameObserver
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
-        onlineSessions.add(session);
         gameEngine.registerPlayer(new Player(session.getId()));
     }
 
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
-        onlineSessions.remove(session);//todo may not be optimal to scan the whole list
         gameEngine.removePlayer(new Player(session.getId()));
     }
 

@@ -14,7 +14,7 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
 import static java.lang.String.format;
-import static java.util.Collections.emptyList;
+import static java.util.Collections.*;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -22,14 +22,14 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 @Slf4j
 @RequiredArgsConstructor
 public class SimpleGameEngine extends Thread implements GameEngine {
-    public static final String ERROR_MESSAGE_PREFIX = "Bet not accepted. ";
+    private static final String ERROR_MESSAGE_PREFIX = "Bet not accepted. ";
     private final GameConfig config;
     private final NumberGenerator numberGenerator;
     private final List<GameObserver> observers = new ArrayList<>();
-    private final Set<Player> players = new LinkedHashSet<>();
+    private final Set<Player> players = synchronizedSet(new LinkedHashSet<>());
     private int round;
     private boolean active = true;
-    private final Map<Integer, List<BetEvent>> roundBets = new HashMap<>();
+    private final Map<Integer, List<BetEvent>> roundBets = synchronizedMap(new HashMap<>());
     private final Semaphore roundMutex = new Semaphore(0);
 
 
@@ -96,11 +96,11 @@ public class SimpleGameEngine extends Thread implements GameEngine {
         while (active) {
             startNewRound();
             TimeUnit.SECONDS.sleep(config.getGapBetweenRounds());
-            log.info("Round {} started", round);
+            log.info("{} Round {} started", getName(), round);
             roundMutex.release();
             TimeUnit.SECONDS.sleep(config.getRoundDuration());
             roundMutex.acquire();
-            log.info("Round {} concluded", round);
+            log.info("{} Round {} concluded", getName(), round);
 
         }
         finalizeRound();
