@@ -16,18 +16,14 @@ public class GameConfig {
     /**
      * Round duration in seconds
      */
-    @NotNull
     @Min(1)
-    private Integer roundDuration;
-    @NotNull
+    private int roundDuration;
     @Min(1)
-    private Integer minStake;
-    @NotNull
+    private int minStake;
     @Min(1)
-    private Integer maxStake;
-    @NotNull
+    private int maxStake;
     @Min(1)
-    private Integer randomNumbersCount;
+    private int randomNumbersCount;
     private double winMultiplier;
 
 }

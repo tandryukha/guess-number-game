@@ -11,17 +11,17 @@ import lombok.extern.slf4j.Slf4j;
 import java.math.BigDecimal;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
-import java.util.stream.DoubleStream;
 
 import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
 @Slf4j
 @RequiredArgsConstructor
 public class SimpleGameEngine extends Thread implements GameEngine {
+    public static final String ERROR_MESSAGE_PREFIX = "Bet not accepted. ";
     private final GameConfig config;
     private final NumberGenerator numberGenerator;
     private final List<GameObserver> observers = new ArrayList<>();
@@ -35,18 +35,34 @@ public class SimpleGameEngine extends Thread implements GameEngine {
         if (event instanceof BetEvent) {
             BetEvent bet = (BetEvent) event;
             Integer number = bet.getNumber();
-            Integer maxNumber = config.getRandomNumbersCount();
-            if (number < 1 || number > maxNumber) {
-                return Optional.of(getOutOfRangeNotification(bet, number, maxNumber));
-            }
+            Optional<PlayerNotification> validationErrors = validate(bet);
+            if (validationErrors.isPresent()) return validationErrors;
             roundBets.putIfAbsent(number, new ArrayList<>());
             roundBets.get(number).add(bet);
         }
         return Optional.empty();
     }
 
-    private static PlayerNotification getOutOfRangeNotification(BetEvent bet, Integer number, Integer maxNumber) {
-        return new PlayerNotification(bet.getPlayer(), format("Number %s is out of range 1..%s", number, maxNumber));
+    private Optional<PlayerNotification> validate(BetEvent bet) {
+        String nickname = bet.getPlayer().getNickname();
+        int number = bet.getNumber();
+        int maxNumber = config.getRandomNumbersCount();
+        double stake = bet.getStake();
+        int minStake = config.getMinStake();
+        int maxStake = config.getMaxStake();
+        Optional<String> errorMessage = Optional.empty();
+        if (isBlank(nickname)) {
+            errorMessage = getErrorMessage("Please provide a nickname");
+        } else if (number < 1 || number > maxNumber) {
+            errorMessage = getErrorMessage(format("Number %s is out of range 1..%s", number, maxNumber));
+        } else if (stake < minStake || stake > maxStake) {
+            errorMessage = getErrorMessage(format("Stake %.2f is out of range %s..%s", stake, minStake, maxStake));
+        }
+        return errorMessage.map(message -> new PlayerNotification(bet.getPlayer(), message));
+    }
+
+    private static Optional<String> getErrorMessage(String message) {
+        return Optional.of(ERROR_MESSAGE_PREFIX + message);
     }
 
     @Override
