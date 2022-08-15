@@ -114,7 +114,7 @@ public class SimpleGameEngine extends Thread implements GameEngine {
 
     private void finalizeRound() {
         if (round < 1 || roundBets.isEmpty()) return;
-        Integer winningNumber = numberGenerator.generate(1, config.getMaxNumberToGenerate());
+        int winningNumber = numberGenerator.generate(1, config.getMaxNumberToGenerate());
         List<BetEvent> winners = Optional.ofNullable(roundBets.remove(winningNumber)).orElse(emptyList());
         List<BetEvent> losers = roundBets.values().stream().flatMap(Collection::stream).collect(toList());
 
@@ -149,7 +149,7 @@ public class SimpleGameEngine extends Thread implements GameEngine {
         notifyObservers(notifications);
     }
 
-    private PlayerNotification getRoundEndNotification(Player player, List<BetEvent> winningBets, Integer winningNumber) {
+    private PlayerNotification getRoundEndNotification(Player player, List<BetEvent> winningBets, int winningNumber) {
         String message = format("Winning number in round %s is %s. Winners:\n", round, winningNumber);
         if (winningBets.isEmpty()) {
             message += "No winners";
