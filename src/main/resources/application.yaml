@@ -1,2 +1,7 @@
 game:
   roundDuration: 10
+  gapBetweenRounds: 5
+  minStake: 1
+  maxStake: 10000
+  maxRandomNumber: 10
+  winMultiplier: 9.9

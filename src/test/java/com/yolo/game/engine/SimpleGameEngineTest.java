@@ -1,7 +1,7 @@
 package com.yolo.game.engine;
 
 import com.yolo.game.config.GameConfig;
-import com.yolo.game.engine.random.NumberGenerator;
+import com.yolo.game.engine.number.NumberGenerator;
 import com.yolo.game.event.BetEvent;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -20,6 +20,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.Mockito.*;
 
 class SimpleGameEngineTest {
@@ -31,7 +32,7 @@ class SimpleGameEngineTest {
     public static final int ROUND_DURATION = 2;
     private final GameConfig config = GameConfig.builder()
             .roundDuration(ROUND_DURATION)
-            .randomNumbersCount(10)
+            .maxNumberToGenerate(10)
             .gapBetweenRounds(0)
             .minStake(3)
             .maxStake(9999)
@@ -223,6 +224,16 @@ class SimpleGameEngineTest {
                 Arguments.of(new BetEvent(validPlayer, 4, 2.9), new PlayerNotification(validPlayer, "Bet not accepted. Stake 2.90 is out of range 3..9999")),
                 Arguments.of(new BetEvent(validPlayer, 4, 99999), new PlayerNotification(validPlayer, "Bet not accepted. Stake 99999.00 is out of range 3..9999"))
         );
+    }
+
+    @Test
+    void sholdNotAllowNicknameContention() {
+        fail();
+    }
+
+    @Test
+    void shouldNotifyUserAboutInvalidEvent() {
+        fail();
     }
 
     private CountDownLatch subscribeObserver(List<List<PlayerNotification>> actualNotifications, int expectedNotificationBulksPerRound) {

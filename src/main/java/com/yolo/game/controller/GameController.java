@@ -4,9 +4,8 @@ import com.yolo.game.engine.GameEngine;
 import com.yolo.game.engine.GameObserver;
 import com.yolo.game.engine.Player;
 import com.yolo.game.engine.PlayerNotification;
-import com.yolo.game.event.EventAdapter;
+import com.yolo.game.event.adapter.EventFactory;
 import com.yolo.game.event.PlayerEvent;
-import jdk.internal.access.JavaIOFileDescriptorAccess;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
@@ -20,31 +19,31 @@ import java.util.*;
 public class GameController extends TextWebSocketHandler implements GameObserver {
     private final GameEngine gameEngine;
 
-    private final EventAdapter eventAdapter;
+    private final EventFactory eventFactory;
     private final Map<String, WebSocketSession> sessions = Collections.synchronizedMap(new HashMap<>());
 
-    public GameController(GameEngine gameEngine, EventAdapter eventAdapter) {
+    public GameController(GameEngine gameEngine, EventFactory eventFactory) {
         this.gameEngine = gameEngine;
-        this.eventAdapter = eventAdapter;
+        this.eventFactory = eventFactory;
         gameEngine.subscribe(this);
         gameEngine.start();
     }
 
     @Override
-    public void afterConnectionEstablished(WebSocketSession session) throws Exception {
+    public void afterConnectionEstablished(WebSocketSession session) {
         sessions.put(session.getId(), session);
         gameEngine.registerPlayer(new Player(session.getId()));
     }
 
     @Override
-    public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
+    public void afterConnectionClosed(WebSocketSession session, CloseStatus status) {
         sessions.remove(session.getId(), session);
         gameEngine.removePlayer(new Player(session.getId()));
     }
 
     @Override
-    protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
-        onPlayerEvent(eventAdapter.toPlayerEvent(message.getPayload()));
+    protected void handleTextMessage(WebSocketSession session, TextMessage message) {
+        onPlayerEvent(eventFactory.toPlayerEvent(session.getId(), message.getPayload()));
     }
 
     @Override

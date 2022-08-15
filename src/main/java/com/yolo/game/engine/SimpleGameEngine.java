@@ -1,7 +1,7 @@
 package com.yolo.game.engine;
 
 import com.yolo.game.config.GameConfig;
-import com.yolo.game.engine.random.NumberGenerator;
+import com.yolo.game.engine.number.NumberGenerator;
 import com.yolo.game.event.BetEvent;
 import com.yolo.game.event.PlayerEvent;
 import lombok.RequiredArgsConstructor;
@@ -55,7 +55,7 @@ public class SimpleGameEngine extends Thread implements GameEngine {
     private Optional<PlayerNotification> validate(BetEvent bet) {
         String nickname = bet.getPlayer().getNickname();
         int number = bet.getNumber();
-        int maxNumber = config.getRandomNumbersCount();
+        int maxNumber = config.getMaxNumberToGenerate();
         double stake = bet.getStake();
         int minStake = config.getMinStake();
         int maxStake = config.getMaxStake();
@@ -114,7 +114,7 @@ public class SimpleGameEngine extends Thread implements GameEngine {
 
     private void finalizeRound() {
         if (round < 1 || roundBets.isEmpty()) return;
-        Integer winningNumber = numberGenerator.generate(1, config.getRandomNumbersCount());
+        Integer winningNumber = numberGenerator.generate(1, config.getMaxNumberToGenerate());
         List<BetEvent> winners = Optional.ofNullable(roundBets.remove(winningNumber)).orElse(emptyList());
         List<BetEvent> losers = roundBets.values().stream().flatMap(Collection::stream).collect(toList());
 
@@ -167,7 +167,7 @@ public class SimpleGameEngine extends Thread implements GameEngine {
 
     private PlayerNotification getRoundStartNotification(Player player) {
         String message = format("Round %s started. You have %s sec to make your bet on numbers from %s to %s",
-                round, config.getRoundDuration(), 1, config.getRandomNumbersCount());
+                round, config.getRoundDuration(), 1, config.getMaxNumberToGenerate());
         return new PlayerNotification(player, message);
     }
 
