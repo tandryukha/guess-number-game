@@ -20,7 +20,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.*;
 
 class SimpleGameEngineTest {
@@ -29,6 +28,15 @@ class SimpleGameEngineTest {
     private static final String ROUND_END_MESSAGE_WINNERS = "Winning number in round 1 is 7. Winners:\n" +
             "- andrey won 9900.00\n" +
             "- paul won 990.00";
+    public static final int ROUND_DURATION = 2;
+    private final GameConfig config = GameConfig.builder()
+            .roundDuration(ROUND_DURATION)
+            .randomNumbersCount(10)
+            .gapBetweenRounds(0)
+            .minStake(3)
+            .maxStake(9999)
+            .winMultiplier(9.9)
+            .build();
     @Mock
     private GameObserver observer;
     @Mock
@@ -66,13 +74,6 @@ class SimpleGameEngineTest {
     @BeforeEach
     void setUp() throws Exception {
         MockitoAnnotations.openMocks(this).close();
-        GameConfig config = GameConfig.builder()
-                .roundDuration(2)
-                .randomNumbersCount(10)
-                .minStake(3)
-                .maxStake(9999)
-                .winMultiplier(9.9)
-                .build();
         engine = new SimpleGameEngine(config, numberGenerator);
         when(numberGenerator.generate(1, 10)).thenReturn(7);
     }
@@ -106,6 +107,7 @@ class SimpleGameEngineTest {
         CountDownLatch latch = subscribeObserver(actualNotifications, 3);
 
         engine.start();
+        TimeUnit.SECONDS.sleep(1);
         engine.onEvent(player1LosingBet);
         engine.onEvent(player2LosingBet);
         latch.await();
@@ -124,6 +126,7 @@ class SimpleGameEngineTest {
         CountDownLatch latch = subscribeObserver(actualNotifications, 3);
 
         engine.start();
+        TimeUnit.SECONDS.sleep(1);
         engine.onEvent(player1LosingBet);
         engine.onEvent(player2LosingBet);
         latch.await();
@@ -145,6 +148,7 @@ class SimpleGameEngineTest {
         CountDownLatch latch = subscribeObserver(actualNotifications, 3);
 
         engine.start();
+        TimeUnit.SECONDS.sleep(1);
         engine.onEvent(player1WinningBet);
         engine.onEvent(player2WinningBet);
         engine.onEvent(player3LosingBet);
@@ -175,6 +179,7 @@ class SimpleGameEngineTest {
         CountDownLatch latch = subscribeObserver(actualNotifications, 4);
 
         engine.start();
+        TimeUnit.SECONDS.sleep(1);
         engine.onEvent(player1WinningBet);
         engine.onEvent(player2WinningBet);
         engine.onEvent(player3LosingBet);
@@ -183,9 +188,7 @@ class SimpleGameEngineTest {
         latch.await();
 
         assertEquals(expectedNotifications, actualNotifications.get(3));
-
     }
-
 
     @DisplayName("Player should be notified about invalid bet")
     @ParameterizedTest
@@ -193,7 +196,20 @@ class SimpleGameEngineTest {
     void shouldNotifyPlayerAboutInvalidBet(BetEvent invalidBet, PlayerNotification expectedNotification) throws InterruptedException {
         engine.registerPlayer(new Player(invalidBet.getPlayer().getId()));
         engine.start();
+        TimeUnit.SECONDS.sleep(1);
         assertEquals(expectedNotification, engine.onEvent(invalidBet).orElse(null));
+    }
+
+    @Test
+    void shouldNotAcceptBetsBetweenRounds() throws InterruptedException {
+        engine.registerPlayer(player1);
+        config.setGapBetweenRounds(3);
+
+        engine.start();
+        TimeUnit.SECONDS.sleep(config.getRoundDuration()+1);
+        PlayerNotification notification = engine.onEvent(player1LosingBet).orElse(null);
+
+        assertEquals(new PlayerNotification(player1,"Bet cannot be accepted between rounds. Try again later"), notification);
     }
 
     public static Stream<Arguments> invalidBetSource() {
@@ -208,8 +224,6 @@ class SimpleGameEngineTest {
                 Arguments.of(new BetEvent(validPlayer, 4, 99999), new PlayerNotification(validPlayer, "Bet not accepted. Stake 99999.00 is out of range 3..9999"))
         );
     }
-
-    //todo should not accept bets between rounds     //todo don't accept players when round not started yet - send message back to them * If there is no active round, user is notified about refused bet
 
     private CountDownLatch subscribeObserver(List<List<PlayerNotification>> actualNotifications, int expectedNotificationBulksPerRound) {
         CountDownLatch latch = new CountDownLatch(expectedNotificationBulksPerRound);

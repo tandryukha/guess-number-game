@@ -10,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.math.BigDecimal;
 import java.util.*;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
 import static java.lang.String.format;
@@ -29,11 +30,15 @@ public class SimpleGameEngine extends Thread implements GameEngine {
     private int round;
     private boolean active = true;
     private final Map<Integer, List<BetEvent>> roundBets = new HashMap<>();
+    private final Semaphore roundMutex = new Semaphore(0);
+
 
     @Override
     public Optional<PlayerNotification> onEvent(PlayerEvent event) {
+        log.info(event.toString());
         if (event instanceof BetEvent) {
             BetEvent bet = (BetEvent) event;
+            if (roundMutex.availablePermits() < 1) return getRoundNotStartedNotification(bet);
             Integer number = bet.getNumber();
             Optional<PlayerNotification> validationErrors = validate(bet);
             if (validationErrors.isPresent()) return validationErrors;
@@ -41,6 +46,10 @@ public class SimpleGameEngine extends Thread implements GameEngine {
             roundBets.get(number).add(bet);
         }
         return Optional.empty();
+    }
+
+    private static Optional<PlayerNotification> getRoundNotStartedNotification(BetEvent bet) {
+        return Optional.of(new PlayerNotification(bet.getPlayer(), "Bet cannot be accepted between rounds. Try again later"));
     }
 
     private Optional<PlayerNotification> validate(BetEvent bet) {
@@ -86,7 +95,13 @@ public class SimpleGameEngine extends Thread implements GameEngine {
         log.info("Starting engine thread {}", getName());
         while (active) {
             startNewRound();
+            TimeUnit.SECONDS.sleep(config.getGapBetweenRounds());
+            log.info("Round {} started", round);
+            roundMutex.release();
             TimeUnit.SECONDS.sleep(config.getRoundDuration());
+            roundMutex.acquire();
+            log.info("Round {} concluded", round);
+
         }
         finalizeRound();
         log.info("Exiting engine thread {}", getName());
@@ -126,7 +141,7 @@ public class SimpleGameEngine extends Thread implements GameEngine {
     }
 
     private void startNewRound() {
-        finalizeRound();
+        finalizeRound();//todo need to block bets once enter this method
         round++;
         List<PlayerNotification> notifications = players.stream()
                 .map(this::getRoundStartNotification)

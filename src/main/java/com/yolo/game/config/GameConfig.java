@@ -6,7 +6,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.validation.annotation.Validated;
 
 import javax.validation.constraints.Min;
-import javax.validation.constraints.NotNull;
 
 @Data
 @Builder()
@@ -18,6 +17,11 @@ public class GameConfig {
      */
     @Min(1)
     private int roundDuration;
+    /**
+     * Gap between rounds in seconds
+     */
+    @Min(0)
+    private int gapBetweenRounds;
     @Min(1)
     private int minStake;
     @Min(1)
