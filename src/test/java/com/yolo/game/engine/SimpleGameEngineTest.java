@@ -3,6 +3,8 @@ package com.yolo.game.engine;
 import com.yolo.game.config.GameConfig;
 import com.yolo.game.engine.number.NumberGenerator;
 import com.yolo.game.event.BetEvent;
+import com.yolo.game.event.InvalidEvent;
+import com.yolo.game.event.PlayerEvent;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -194,7 +196,7 @@ class SimpleGameEngineTest {
     @DisplayName("Player should be notified about invalid bet")
     @ParameterizedTest
     @MethodSource("invalidBetSource")
-    void shouldNotifyPlayerAboutInvalidBet(BetEvent invalidBet, PlayerNotification expectedNotification) throws InterruptedException {
+    void shouldNotifyPlayerAboutInvalidBet(PlayerEvent invalidBet, PlayerNotification expectedNotification) throws InterruptedException {
         engine.registerPlayer(new Player(invalidBet.getPlayer().getId()));
         engine.start();
         TimeUnit.SECONDS.sleep(1);
@@ -222,18 +224,9 @@ class SimpleGameEngineTest {
                 Arguments.of(new BetEvent(validPlayer, 0, 99.1), new PlayerNotification(validPlayer, "Bet not accepted. Number 0 is out of range 1..10")),
                 Arguments.of(new BetEvent(validPlayer, 0, -1), new PlayerNotification(validPlayer, "Bet not accepted. Number 0 is out of range 1..10")),
                 Arguments.of(new BetEvent(validPlayer, 4, 2.9), new PlayerNotification(validPlayer, "Bet not accepted. Stake 2.90 is out of range 3..9999")),
-                Arguments.of(new BetEvent(validPlayer, 4, 99999), new PlayerNotification(validPlayer, "Bet not accepted. Stake 99999.00 is out of range 3..9999"))
+                Arguments.of(new BetEvent(validPlayer, 4, 99999), new PlayerNotification(validPlayer, "Bet not accepted. Stake 99999.00 is out of range 3..9999")),
+                Arguments.of(new InvalidEvent(noNickPlayer, "Player input was incorrect"), new PlayerNotification(noNickPlayer, "Player input was incorrect"))
         );
-    }
-
-    @Test
-    void sholdNotAllowNicknameContention() {
-        fail();
-    }
-
-    @Test
-    void shouldNotifyUserAboutInvalidEvent() {
-        fail();
     }
 
     private CountDownLatch subscribeObserver(List<List<PlayerNotification>> actualNotifications, int expectedNotificationBulksPerRound) {

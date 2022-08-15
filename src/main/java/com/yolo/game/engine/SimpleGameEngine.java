@@ -3,6 +3,7 @@ package com.yolo.game.engine;
 import com.yolo.game.config.GameConfig;
 import com.yolo.game.engine.number.NumberGenerator;
 import com.yolo.game.event.BetEvent;
+import com.yolo.game.event.InvalidEvent;
 import com.yolo.game.event.PlayerEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -36,19 +37,25 @@ public class SimpleGameEngine extends Thread implements GameEngine {
     @Override
     public Optional<PlayerNotification> onEvent(PlayerEvent event) {
         log.info(event.toString());
+        if (roundMutex.availablePermits() < 1) return getRoundNotStartedNotification(event);
         if (event instanceof BetEvent) {
             BetEvent bet = (BetEvent) event;
-            if (roundMutex.availablePermits() < 1) return getRoundNotStartedNotification(bet);
             Integer number = bet.getNumber();
             Optional<PlayerNotification> validationErrors = validate(bet);
             if (validationErrors.isPresent()) return validationErrors;
             roundBets.putIfAbsent(number, new ArrayList<>());
             roundBets.get(number).add(bet);
+        } else if (event instanceof InvalidEvent) {
+            return getInvalidEventNotification((InvalidEvent) event);
         }
         return Optional.empty();
     }
 
-    private static Optional<PlayerNotification> getRoundNotStartedNotification(BetEvent bet) {
+    private Optional<PlayerNotification> getInvalidEventNotification(InvalidEvent event) {
+        return Optional.of(new PlayerNotification(event.getPlayer(), event.getMessage()));
+    }
+
+    private static Optional<PlayerNotification> getRoundNotStartedNotification(PlayerEvent bet) {
         return Optional.of(new PlayerNotification(bet.getPlayer(), "Bet cannot be accepted between rounds. Try again later"));
     }
 
