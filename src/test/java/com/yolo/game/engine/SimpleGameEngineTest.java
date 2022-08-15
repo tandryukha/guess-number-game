@@ -3,7 +3,6 @@ package com.yolo.game.engine;
 import com.yolo.game.config.GameConfig;
 import com.yolo.game.engine.random.NumberGenerator;
 import com.yolo.game.event.BetEvent;
-import com.yolo.game.event.PlayerEvent;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -99,6 +98,7 @@ class SimpleGameEngineTest {
     @DisplayName("At the end of the round all players should be notified about round stats when there is no winner")
     @Test
     void shouldNotifyEverybodyAboutRoundStats() throws InterruptedException {
+        List<PlayerNotification> expectedNotifications = List.of(player1RoundEnd1Notification, player2RoundEnd1Notification, player3RoundStats1Notification);
         engine.registerPlayer(player1);
         engine.registerPlayer(player2);
         engine.registerPlayer(player3);
@@ -110,7 +110,7 @@ class SimpleGameEngineTest {
         engine.onEvent(player2LosingBet);
         latch.await();
 
-        assertTrue(actualNotifications.contains(List.of(player1RoundEnd1Notification, player2RoundEnd1Notification, player3RoundStats1Notification)));
+        assertEquals(expectedNotifications, actualNotifications.get(2));
     }
 
     @DisplayName("At the end of the round losers should be notified about their loss")
@@ -119,6 +119,7 @@ class SimpleGameEngineTest {
         engine.registerPlayer(player1);
         engine.registerPlayer(player2);
         engine.registerPlayer(player3);
+        List<PlayerNotification> expectedNotifications = List.of(player1LostRoundNotification, player2LostRound1Notification);
         final List<List<PlayerNotification>> actualNotifications = new ArrayList<>();
         CountDownLatch latch = subscribeObserver(actualNotifications, 3);
 
@@ -127,7 +128,8 @@ class SimpleGameEngineTest {
         engine.onEvent(player2LosingBet);
         latch.await();
 
-        assertTrue(actualNotifications.contains(List.of(player1LostRoundNotification, player2LostRound1Notification)));
+        assertEquals(expectedNotifications, actualNotifications.get(1));
+
     }
 
     @DisplayName("At the end of the round winners should be notified about their win")
@@ -138,6 +140,7 @@ class SimpleGameEngineTest {
         engine.registerPlayer(player3);
         engine.registerPlayer(player4);
         engine.registerPlayer(player5);
+        List<PlayerNotification> expectedNotifications = List.of(player1WinRoundNotification, player2WinRound1Notification);
         final List<List<PlayerNotification>> actualNotifications = new ArrayList<>();
         CountDownLatch latch = subscribeObserver(actualNotifications, 3);
 
@@ -149,7 +152,8 @@ class SimpleGameEngineTest {
         engine.onEvent(player5LosingBet);
         latch.await();
 
-        assertTrue(actualNotifications.contains(List.of(player1WinRoundNotification, player2WinRound1Notification)));
+        assertEquals(expectedNotifications, actualNotifications.get(1));
+
     }
 
     @DisplayName("At the end of the round everybody should be notified about winnings")
@@ -160,6 +164,13 @@ class SimpleGameEngineTest {
         engine.registerPlayer(player3);
         engine.registerPlayer(player4);
         engine.registerPlayer(player5);
+        List<PlayerNotification> expectedNotifications = List.of(
+                player1Round1EndWinningNotification,
+                player2Round1EndWinningNotification,
+                player3Round1EndWinningNotification,
+                player4Round1EndWinningNotification,
+                player5Round1EndWinningNotification
+        );
         final List<List<PlayerNotification>> actualNotifications = new ArrayList<>();
         CountDownLatch latch = subscribeObserver(actualNotifications, 4);
 
@@ -171,15 +182,19 @@ class SimpleGameEngineTest {
         engine.onEvent(player5LosingBet);
         latch.await();
 
-        assertTrue(actualNotifications.contains(List.of(
-                player1Round1EndWinningNotification,
-                player2Round1EndWinningNotification,
-                player3Round1EndWinningNotification,
-                player4Round1EndWinningNotification,
-                player5Round1EndWinningNotification
-        )));
+        assertEquals(expectedNotifications, actualNotifications.get(3));
+
     }
 
+
+    @DisplayName("Player should be notified about invalid bet")
+    @ParameterizedTest
+    @MethodSource("invalidBetSource")
+    void shouldNotifyPlayerAboutInvalidBet(BetEvent invalidBet, PlayerNotification expectedNotification) throws InterruptedException {
+        engine.registerPlayer(new Player(invalidBet.getPlayer().getId()));
+        engine.start();
+        assertEquals(expectedNotification, engine.onEvent(invalidBet).orElse(null));
+    }
 
     public static Stream<Arguments> invalidBetSource() {
         Player noNickPlayer = new Player("99999", null);
@@ -194,17 +209,6 @@ class SimpleGameEngineTest {
         );
     }
 
-    @DisplayName("Player should be notified about invalid bet")
-    @ParameterizedTest
-    @MethodSource("invalidBetSource")
-    void shouldNotifyPlayerAboutInvalidBet(BetEvent invalidBet, PlayerNotification expectedNotification) throws InterruptedException {
-        engine.registerPlayer(new Player(invalidBet.getPlayer().getId()));
-        engine.start();
-        assertEquals(expectedNotification, engine.onEvent(invalidBet).orElse(null));
-    }
-
-    //todo change contains to equals
-    //todo join most test cases into one generic and dynamic data source
     //todo should not accept bets between rounds     //todo don't accept players when round not started yet - send message back to them * If there is no active round, user is notified about refused bet
 
     private CountDownLatch subscribeObserver(List<List<PlayerNotification>> actualNotifications, int expectedNotificationBulksPerRound) {
