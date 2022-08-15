@@ -31,19 +31,18 @@ class SimpleGameEngineTest {
     @Mock
     private NumberGenerator numberGenerator;
     private GameEngine engine;
-    private final Player player1 = new Player("11111","andrey");
-    private final Player player2 = new Player("22222","paul");
-    private final Player player3 = new Player("33333","sdf0df");
-    private final Player player4 = new Player("44444","asf9as");
-    private final Player player5 = new Player("55555","asdf0as");
-    private final BetEvent player1LosingBet = new BetEvent(player1, 1, BigDecimal.valueOf(50));
-    private final BetEvent player2LosingBet = new BetEvent(player2, 2, BigDecimal.valueOf(100));
-
-    private final BetEvent player1WinningBet = new BetEvent(player1, 7, BigDecimal.valueOf(1000));
-    private final BetEvent player2WinningBet = new BetEvent(player2, 7, BigDecimal.valueOf(100));
-    private final BetEvent player3LosingBet = new BetEvent(player3, 3, BigDecimal.valueOf(500));
-    private final BetEvent player4LosingBet = new BetEvent(player4, 4, BigDecimal.valueOf(1000));
-    private final BetEvent player5LosingBet = new BetEvent(player5, 5, BigDecimal.valueOf(50));
+    private final Player player1 = new Player("11111", "andrey");
+    private final Player player2 = new Player("22222", "paul");
+    private final Player player3 = new Player("33333", "sdf0df");
+    private final Player player4 = new Player("44444", "asf9as");
+    private final Player player5 = new Player("55555", "asdf0as");
+    private final BetEvent player1LosingBet = new BetEvent(player1, 1, 50.0);
+    private final BetEvent player2LosingBet = new BetEvent(player2, 2, 100.0);
+    private final BetEvent player1WinningBet = new BetEvent(player1, 7, 1000.0);
+    private final BetEvent player2WinningBet = new BetEvent(player2, 7, 100.0);
+    private final BetEvent player3LosingBet = new BetEvent(player3, 3, 500.0);
+    private final BetEvent player4LosingBet = new BetEvent(player4, 4, 1000.0);
+    private final BetEvent player5LosingBet = new BetEvent(player5, 5, 50.0);
 
     private final PlayerNotification player1StartRound1Notification = new PlayerNotification(player1, "Round 1 started. You have 2 sec to make your bet on numbers from 1 to 10");
     private final PlayerNotification player1StartRound2Notification = new PlayerNotification(player1, "Round 2 started. You have 2 sec to make your bet on numbers from 1 to 10");

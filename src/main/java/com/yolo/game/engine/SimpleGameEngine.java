@@ -130,8 +130,8 @@ public class SimpleGameEngine extends Thread implements GameEngine {
         return new PlayerNotification(player, message);
     }
 
-    private double calculateWinning(BigDecimal stake) {
-        return stake.multiply(BigDecimal.valueOf(config.getWinMultiplier())).doubleValue();
+    private double calculateWinning(double stake) {
+        return BigDecimal.valueOf(stake).multiply(BigDecimal.valueOf(config.getWinMultiplier())).doubleValue();
     }
 
     private PlayerNotification getRoundStartNotification(Player player) {
