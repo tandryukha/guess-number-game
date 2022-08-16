@@ -17,6 +17,14 @@ Backend for a guess the number game. Communication with players is done via web 
 
 Technologies: Java 11, Gradle, Spring Boot
 
+# How to run game server locally
+1. Install Docker Desktop
+2. Navigate to project root foler
+2. docker-compose run
+
+# Local development
+ Run `./gradlew build` to run tests and package jar
 
 # Further improvements
 - Write test players and run E2E tests
+- Optimize docker image size
