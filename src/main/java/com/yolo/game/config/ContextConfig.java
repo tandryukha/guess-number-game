@@ -13,8 +13,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.socket.config.annotation.EnableWebSocket;
 
-import javax.annotation.PostConstruct;
-
 @Configuration
 @EnableWebSocket
 @RequiredArgsConstructor
