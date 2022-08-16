@@ -1,6 +1,6 @@
 game:
   roundDuration: 3
-  gapBetweenRounds: 4
+  gapBetweenRounds: 1
   minStake: 1
   maxStake: 10000
   maxNumberToGenerate: 10

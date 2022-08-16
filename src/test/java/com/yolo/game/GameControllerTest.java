@@ -14,7 +14,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.web.server.LocalServerPort;
-import org.springframework.context.ApplicationContext;
 import org.springframework.test.annotation.DirtiesContext;
 
 import java.io.IOException;
@@ -73,7 +72,7 @@ public class GameControllerTest {
 
     @DisplayName("Single player should win in case he guesses the number")
     @Test
-    void singlePlayerShouldWin() throws Exception {
+    void playerShouldWin() throws Exception {
         WebSocket socket = openSocket();
         List<String> notifications = addPlayer(socket);
         List<String> expectedNotifications = List.of(
@@ -92,7 +91,7 @@ public class GameControllerTest {
 
     @DisplayName("Single player should lose in case he doesn't guess the number")
     @Test
-    void singlePlayerShouldLose() throws Exception {
+    void playerShouldLose() throws Exception {
         WebSocket socket = openSocket();
         List<String> notifications = addPlayer(socket);
         List<String> expectedNotifications = List.of(
