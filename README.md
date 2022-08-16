@@ -19,11 +19,17 @@ Technologies: Java 11, Gradle, Spring Boot
 
 # How to run game server locally
 1. Install Docker Desktop
-2. Navigate to project root foler
+2. Navigate to project root folder
 2. docker-compose run
 
 # Local development
  Run `./gradlew build` to run tests and package jar
+
+# Customization
+Game parameters may be customized in application.yaml
+
+# Implementation notes
+Simple-threaded game server on spring boot that can accept many simultaneous players at the same time.
 
 # Further improvements
 - Write test players and run E2E tests
