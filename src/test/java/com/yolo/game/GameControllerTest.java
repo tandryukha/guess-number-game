@@ -19,7 +19,7 @@ public class GameControllerTest {
     @Test
     void socketShouldOpen() throws IOException, WebSocketException {
         WebSocket socket = new WebSocketFactory()
-                .createSocket(String.format("http://localhost:%s/echo", port))
+                .createSocket(String.format("ws://localhost:%s/game/guessNumber", port))
                 .connect();
         assertTrue(socket.isOpen());
     }

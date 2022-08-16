@@ -12,6 +12,7 @@ import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
+import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.util.*;
 
@@ -26,6 +27,10 @@ public class GameController extends TextWebSocketHandler implements GameObserver
         this.gameEngine = gameEngine;
         this.eventFactory = eventFactory;
         gameEngine.subscribe(this);
+    }
+
+    @PostConstruct
+    public void postConstruct(){
         gameEngine.start();
     }
 

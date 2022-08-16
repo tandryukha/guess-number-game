@@ -3,5 +3,5 @@ game:
   gapBetweenRounds: 5
   minStake: 1
   maxStake: 10000
-  maxRandomNumber: 10
+  maxNumberToGenerate: 10
   winMultiplier: 9.9
