@@ -21,7 +21,7 @@ public class GameController extends TextWebSocketHandler implements GameObserver
     private final GameEngine gameEngine;
 
     private final EventFactory eventFactory;
-    private final Map<String, WebSocketSession> sessions = Collections.synchronizedMap(new HashMap<>());
+    private static final Map<String, WebSocketSession> sessions = Collections.synchronizedMap(new HashMap<>());
 
     public GameController(GameEngine gameEngine, EventFactory eventFactory) {
         this.gameEngine = gameEngine;
@@ -36,12 +36,14 @@ public class GameController extends TextWebSocketHandler implements GameObserver
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) {
+        log.info("Session {} joined", session.getId());
         sessions.put(session.getId(), session);
         gameEngine.registerPlayer(new Player(session.getId()));
     }
 
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) {
+        log.info("Session {} exited", session.getId());
         sessions.remove(session.getId(), session);
         gameEngine.removePlayer(new Player(session.getId()));
     }
@@ -62,10 +64,11 @@ public class GameController extends TextWebSocketHandler implements GameObserver
     }
 
     private void notifyPlayer(PlayerNotification playerNotification) {
+        log.debug("sending notification {}", playerNotification);
         WebSocketSession session = sessions.get(playerNotification.getPlayer().getId());
         try {
             session.sendMessage(new TextMessage(playerNotification.getMessage()));
-        } catch (IOException e) {
+        } catch (Exception e) {
             log.error("Failed to send notification: {}", playerNotification, e);
         }
     }

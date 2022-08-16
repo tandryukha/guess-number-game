@@ -148,7 +148,7 @@ public class SimpleGameEngine extends Thread implements GameEngine {
     }
 
     private void startNewRound() {
-        finalizeRound();//todo need to block bets once enter this method
+        finalizeRound();
         round++;
         List<PlayerNotification> notifications = players.stream()
                 .map(this::getRoundStartNotification)

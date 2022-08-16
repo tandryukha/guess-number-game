@@ -1,0 +1,11 @@
+game:
+  roundDuration: 3
+  gapBetweenRounds: 4
+  minStake: 1
+  maxStake: 10000
+  maxNumberToGenerate: 10
+  winMultiplier: 9.9
+
+logging:
+  level:
+    com.yolo.game: debug
